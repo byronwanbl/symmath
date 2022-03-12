@@ -7,4 +7,4 @@ data Expr
   | Rec Expr
   | Pow Expr Expr
   | Alpha Char
-  | Num Int
+  | Num Integer 
