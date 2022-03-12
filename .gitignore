@@ -1,0 +1,9 @@
+.stack-work/
+stack.yaml.lock
+
+*.cabal
+*.excalidraw
+
+*~
+.vscode
+*.code-workspace
