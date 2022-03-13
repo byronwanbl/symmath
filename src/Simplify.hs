@@ -1,25 +1,32 @@
 module Simplify where
 
+import Data.Function ((&))
+import Lib (Expr (..))
+import MaybeChanged (MaybeChanged (..), applyRecursively, applyUntilNoChanged)
 import Prelude
-import Data.Maybe (Maybe(..))
-import Lib (Expr(..))
+import Control.Category ((>>>))
 
 simplify :: Expr -> Expr
-simplify e = e
+simplify = mulIntoR >>> reconstructMulR >>> reconstructAddR
 
-reconstructAdd :: Expr -> Maybe Expr
-reconstructAdd (Add x (Add y z)) = Just (Add (Add x y) z)
+reconstructAdd :: Expr -> MaybeChanged Expr
+reconstructAdd (Add x (Add y z)) = Changed (Add (Add x y) z)
+reconstructAdd x = NoChanged x
 
-reconstructAdd _ = Nothing
+reconstructMul :: Expr -> MaybeChanged Expr
+reconstructMul (Mul x (Mul y z)) = Changed (Mul (Mul x y) z)
+reconstructMul x = NoChanged x
 
-reconstructMul :: Expr -> Maybe Expr
-reconstructMul (Mul x (Mul y z)) = Just (Mul (Mul x y) z)
+mulInto :: Expr -> MaybeChanged Expr
+mulInto (Mul (Add x y) z) = Changed (Add (Mul x z) (Mul y z))
+mulInto (Mul x (Add y z)) = Changed (Add (Mul x y) (Mul x z))
+mulInto x = NoChanged x
 
-reconstructMul _ = Nothing
+reconstructAddR :: Expr -> Expr
+reconstructAddR = (reconstructAdd & applyRecursively) & applyUntilNoChanged
 
-mulInto :: Expr -> Maybe Expr
-mulInto (Mul (Add x y) z) = Just (Add (Mul x z) (Mul y z))
+reconstructMulR :: Expr -> Expr
+reconstructMulR = (reconstructMul & applyRecursively) & applyUntilNoChanged
 
-mulInto (Mul x (Add y z)) = Just (Add (Mul x y) (Mul x z))
-
-mulInto _ = Nothing
+mulIntoR :: Expr -> Expr
+mulIntoR = (mulInto & applyRecursively) & applyUntilNoChanged
