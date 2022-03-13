@@ -1,32 +1,35 @@
-module Simplify where
+module Simplify (simplify) where
 
+import Control.Category ((>>>))
 import Data.Function ((&))
 import Lib (Expr (..))
-import MaybeChanged (MaybeChanged (..), applyRecursively, applyUntilNoChanged)
+import MaybeChanged (MaybeChanged (..), applyRecursively, applyRecursivelyUntilNoChanged, applyUntilNoChanged)
 import Prelude
-import Control.Category ((>>>))
 
 simplify :: Expr -> Expr
-simplify = mulIntoR >>> reconstructMulR >>> reconstructAddR
+simplify =
+  (counteractOppAndRec & applyRecursivelyUntilNoChanged)
+    >>> (distributeMul & applyRecursivelyUntilNoChanged)
+    >>> (reconstructAddAndMul & applyRecursivelyUntilNoChanged)
 
-reconstructAdd :: Expr -> MaybeChanged Expr
-reconstructAdd (Add x (Add y z)) = Changed (Add (Add x y) z)
-reconstructAdd x = NoChanged x
+counteractOppAndRec :: Expr -> MaybeChanged Expr
+counteractOppAndRec (Opp (Opp x)) = Changed x
+counteractOppAndRec (Rec (Rec x)) = Changed x
+counteractOppAndRec x = NoChanged x
 
-reconstructMul :: Expr -> MaybeChanged Expr
-reconstructMul (Mul x (Mul y z)) = Changed (Mul (Mul x y) z)
-reconstructMul x = NoChanged x
+distributeMul :: Expr -> MaybeChanged Expr
+distributeMul (Mul (Add x y) z) = Changed (Add (Mul x z) (Mul y z))
+distributeMul (Mul x (Add y z)) = Changed (Add (Mul x y) (Mul x z))
+distributeMul (Opp (Add x y)) = Changed (Add (Opp x) (Opp y))
+distributeMul (Rec (Mul x y)) = Changed (Mul (Rec x) (Rec y))
+distributeMul x = NoChanged x
 
-mulInto :: Expr -> MaybeChanged Expr
-mulInto (Mul (Add x y) z) = Changed (Add (Mul x z) (Mul y z))
-mulInto (Mul x (Add y z)) = Changed (Add (Mul x y) (Mul x z))
-mulInto x = NoChanged x
+reconstructAddAndMul :: Expr -> MaybeChanged Expr
+reconstructAddAndMul (Add x (Add y z)) = Changed (Add (Add x y) z)
+reconstructAddAndMul (Mul x (Mul y z)) = Changed (Mul (Mul x y) z)
+reconstructAddAndMul x = NoChanged x
 
-reconstructAddR :: Expr -> Expr
-reconstructAddR = (reconstructAdd & applyRecursively) & applyUntilNoChanged
-
-reconstructMulR :: Expr -> Expr
-reconstructMulR = (reconstructMul & applyRecursively) & applyUntilNoChanged
-
-mulIntoR :: Expr -> Expr
-mulIntoR = (mulInto & applyRecursively) & applyUntilNoChanged
+expandPow :: Expr -> MaybeChanged Expr
+expandPow (Pow x (Num 1)) = Changed x
+expandPow (Pow x (Num i)) = Changed (Mul x (Pow x (Num (i - 1))))
+expandPow x = NoChanged x

@@ -10,6 +10,7 @@ module MaybeChanged
     peek,
     applyRecursively,
     applyUntilNoChanged,
+    applyRecursivelyUntilNoChanged,
   )
 where
 
@@ -57,6 +58,9 @@ applyUntilNoChanged :: (a -> MaybeChanged a) -> a -> a
 applyUntilNoChanged f x = case f x of
   Changed x' -> applyUntilNoChanged f x'
   NoChanged x' -> x'
+
+applyRecursivelyUntilNoChanged :: ApplyInto a => (a -> MaybeChanged a) -> a -> a
+applyRecursivelyUntilNoChanged = applyRecursively >>> applyUntilNoChanged
 
 instance ApplyInto Expr where
   applyInto f (Add x y) = chainBy Add (f x) (f y)
