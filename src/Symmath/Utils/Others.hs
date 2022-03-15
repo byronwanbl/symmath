@@ -1,4 +1,4 @@
-module Utils
+module Symmath.Utils.Others
   ( show,
     priority,
     (.+),
@@ -11,7 +11,7 @@ module Utils
   )
 where
 
-import Lib (Expr (..))
+import Symmath.Expr (Expr (..))
 import Prelude
 
 instance Show Expr where

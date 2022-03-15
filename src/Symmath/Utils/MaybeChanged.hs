@@ -1,4 +1,4 @@
-module MaybeChanged
+module Symmath.Utils.MaybeChanged
   ( ApplyInto,
     MaybeChanged (..),
     apply,
@@ -11,12 +11,13 @@ module MaybeChanged
     applyRecursively,
     applyUntilNoChanged,
     applyRecursivelyUntilNoChanged,
+    applyUntilNoChangedRecursively,
   )
 where
 
 import Control.Category ((>>>))
 import Data.Function ((&))
-import Lib (Expr (..))
+import Symmath.Expr (Expr (..))
 import Prelude
 
 class ApplyInto a where
@@ -61,6 +62,9 @@ applyUntilNoChanged f x = case f x of
 
 applyRecursivelyUntilNoChanged :: ApplyInto a => (a -> MaybeChanged a) -> a -> a
 applyRecursivelyUntilNoChanged = applyRecursively >>> applyUntilNoChanged
+
+applyUntilNoChangedRecursively :: ApplyInto a => (a -> MaybeChanged a) -> a -> a
+applyUntilNoChangedRecursively f = applyRecursively (applyUntilNoChanged f >>> Changed) >>> peek
 
 instance ApplyInto Expr where
   applyInto f (Add x y) = chainBy Add (f x) (f y)

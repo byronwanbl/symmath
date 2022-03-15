@@ -1,14 +1,15 @@
-module Simplify (simplify) where
+module Symmath.Simplify (simplify) where
 
 import Control.Category ((>>>))
 import Data.Function ((&))
-import Lib (Expr (..))
-import MaybeChanged (MaybeChanged (..), applyRecursively, applyRecursivelyUntilNoChanged, applyUntilNoChanged)
+import Symmath.Expr (Expr (..))
+import Symmath.Utils.MaybeChanged (MaybeChanged (..), applyRecursively, applyRecursivelyUntilNoChanged, applyUntilNoChanged, peek)
 import Prelude
 
 simplify :: Expr -> Expr
 simplify =
-  (counteractOppAndRec & applyRecursivelyUntilNoChanged)
+  ((counteractOppAndRec & applyRecursively) >>> peek)
+    >>> ((expandPow & applyRecursively) >>> peek)
     >>> (distributeMul & applyRecursivelyUntilNoChanged)
     >>> (reconstructAddAndMul & applyRecursivelyUntilNoChanged)
 

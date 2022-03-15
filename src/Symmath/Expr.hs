@@ -1,4 +1,4 @@
-module Lib (Expr(..)) where
+module Symmath.Expr (Expr(..)) where
 
 data Expr
   = Add Expr Expr
