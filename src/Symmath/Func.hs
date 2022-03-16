@@ -4,22 +4,24 @@
 module Symmath.Func (ApplyInto (..)) where
 
 import Symmath.Expr (Expr (..))
-import Symmath.Utils.Others (exprKindId, unwrapPair, unreachable)
+import Symmath.Utils.Others (exprKindId, unreachable)
 
 class ApplyInto a b c where
   applyInto :: (a -> b) -> a -> c
 
+newtype ExprPairEq = ExprPairEq (Expr, Expr)
+
 instance Eq Expr where
   (==) (Alpha x) (Alpha y) = x == y
   (==) (Num x) (Num y) = x == y
-  (==) x y = (exprKindId x == exprKindId y) && applyInto (unwrapPair (==)) (x, y)
+  (==) x y = (exprKindId x == exprKindId y) && applyInto (\(ExprPairEq (x, y)) -> x == y) (ExprPairEq (x, y))
 
-instance ApplyInto (Expr, Expr) Bool Bool where
-  applyInto f (Add x1 y1, Add x2 y2) = f (x1, x2) && f (y1, y2)
-  applyInto f (Mul x1 y1, Mul x2 y2) = f (x1, x2) && f (y1, y2)
-  applyInto f (Pow x1 y1, Pow x2 y2) = f (x1, x2) && f (y1, y2)
-  applyInto f (Opp x1, Opp x2) = f (x1, x2)
-  applyInto f (Rec x1, Rec x2) = f (x1, x2)
+instance ApplyInto ExprPairEq Bool Bool where
+  applyInto f (ExprPairEq (Add x1 y1, Add x2 y2)) = f (ExprPairEq (x1, x2)) && f (ExprPairEq (y1, y2))
+  applyInto f (ExprPairEq (Mul x1 y1, Mul x2 y2)) = f (ExprPairEq (x1, x2)) && f (ExprPairEq (y1, y2))
+  applyInto f (ExprPairEq (Pow x1 y1, Pow x2 y2)) = f (ExprPairEq (x1, x2)) && f (ExprPairEq (y1, y2))
+  applyInto f (ExprPairEq (Opp x1, Opp x2)) = f (ExprPairEq (x1, x2))
+  applyInto f (ExprPairEq (Rec x1, Rec x2)) = f (ExprPairEq (x1, x2))
   applyInto _ _ = unreachable
 
 instance Ord Expr where
@@ -28,21 +30,23 @@ instance Ord Expr where
   compare x y = case compare (exprKindId x) (exprKindId y) of
     LT -> LT
     GT -> GT
-    EQ -> applyInto (unwrapPair compare) (x, y)
+    EQ -> applyInto (\(ExprPairOrd (x, y)) -> compare x y) (ExprPairOrd (x, y))
 
-instance ApplyInto (Expr, Expr) Ordering Ordering where
-  applyInto f (Add x1 y1, Add x2 y2) = case f (x1, x2) of
+newtype ExprPairOrd = ExprPairOrd (Expr, Expr)
+
+instance ApplyInto ExprPairOrd Ordering Ordering where
+  applyInto f (ExprPairOrd (Add x1 y1, Add x2 y2)) = case f (ExprPairOrd (x1, x2)) of
     LT -> LT
     GT -> GT
-    EQ -> f (y1, y2)
-  applyInto f (Mul x1 y1, Mul x2 y2) = case f (x1, x2) of
+    EQ -> f (ExprPairOrd (y1, y2))
+  applyInto f (ExprPairOrd (Mul x1 y1, Mul x2 y2)) = case f (ExprPairOrd (x1, x2)) of
     LT -> LT
     GT -> GT
-    EQ -> f (y1, y2)
-  applyInto f (Pow x1 y1, Pow x2 y2) = case f (x1, x2) of
+    EQ -> f (ExprPairOrd (y1, y2))
+  applyInto f (ExprPairOrd (Pow x1 y1, Pow x2 y2)) = case f (ExprPairOrd (x1, x2)) of
     LT -> LT
     GT -> GT
-    EQ -> f (y1, y2)
-  applyInto f (Opp x1, Opp x2) = f (x1, x2)
-  applyInto f (Rec x1, Rec x2) = f (x1, x2)
+    EQ -> f (ExprPairOrd (y1, y2))
+  applyInto f (ExprPairOrd (Opp x1, Opp x2)) = f (ExprPairOrd (x1, x2))
+  applyInto f (ExprPairOrd (Rec x1, Rec x2)) = f (ExprPairOrd (x1, x2))
   applyInto _ _ = unreachable
