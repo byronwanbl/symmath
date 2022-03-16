@@ -1,6 +1,9 @@
 module Symmath.Utils.Others
   ( show,
     priority,
+    exprKindId,
+    unwrapPair,
+    unreachable,
     (.+),
     (.-),
     (.*),
@@ -38,6 +41,21 @@ priority (Rec _) = 20
 priority (Pow _ _) = 30
 priority (Alpha _) = 100
 priority (Num _) = 100
+
+exprKindId :: Expr -> Int
+exprKindId (Add _ _) = 1
+exprKindId (Opp _) = 2
+exprKindId (Mul _ _) = 3
+exprKindId (Rec _) = 4
+exprKindId (Pow _ _) = 5
+exprKindId (Alpha _) = 6
+exprKindId (Num _) = 7
+
+unwrapPair :: (a -> b -> c) -> (a, b) -> c
+unwrapPair f (x, y) = f x y
+
+unreachable :: a
+unreachable = error "Unreachable"
 
 infixl 6 .+
 

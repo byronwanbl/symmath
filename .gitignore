@@ -2,8 +2,9 @@
 stack.yaml.lock
 
 *.cabal
-*.excalidraw
 
 *~
-.vscode
+*.excalidraw
+.vscode/
 *.code-workspace
+.duplicacy/

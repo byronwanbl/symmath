@@ -1,17 +1,18 @@
-module Symmath.Simplify (simplify) where
+module Symmath.Simplify where
 
 import Control.Category ((>>>))
 import Data.Function ((&))
 import Symmath.Expr (Expr (..))
-import Symmath.Utils.MaybeChanged (MaybeChanged (..), applyRecursively, applyRecursivelyUntilNoChanged, applyUntilNoChanged, peek)
+import Symmath.Utils.MaybeChanged (MaybeChanged (..), applyRecursivelyR2L, applyUntilNoChanged, peek)
 import Prelude
 
 simplify :: Expr -> Expr
 simplify =
-  ((counteractOppAndRec & applyRecursively) >>> peek)
-    >>> ((expandPow & applyRecursively) >>> peek)
-    >>> (distributeMul & applyRecursivelyUntilNoChanged)
-    >>> (reconstructAddAndMul & applyRecursivelyUntilNoChanged)
+  ((counteractOppAndRec & applyRecursivelyR2L) >>> peek)
+    >>> ((expandPow & applyRecursivelyR2L) >>> peek)
+    >>> (distributeMul & applyRecursivelyR2L & applyUntilNoChanged)
+    >>> (reconstructAddAndMul & applyRecursivelyR2L & applyUntilNoChanged)
+    >>> (reconstructAddAndMulByOrd & applyRecursivelyR2L & applyUntilNoChanged)
 
 counteractOppAndRec :: Expr -> MaybeChanged Expr
 counteractOppAndRec (Opp (Opp x)) = Changed x
@@ -34,3 +35,10 @@ expandPow :: Expr -> MaybeChanged Expr
 expandPow (Pow x (Num 1)) = Changed x
 expandPow (Pow x (Num i)) = Changed (Mul x (Pow x (Num (i - 1))))
 expandPow x = NoChanged x
+
+reconstructAddAndMulByOrd :: Expr -> MaybeChanged Expr
+reconstructAddAndMulByOrd a@(Add (Add x y) z) = if y > z then Changed (Add (Add x z) y) else NoChanged a
+reconstructAddAndMulByOrd a@(Add x y) = if x > y then Changed (Add y x) else NoChanged a
+reconstructAddAndMulByOrd a@(Mul (Mul x y) z) = if y > z then Changed (Mul (Mul x z) y) else NoChanged a
+reconstructAddAndMulByOrd a@(Mul x y) = if x > y then Changed (Mul y x) else NoChanged a
+reconstructAddAndMulByOrd x = NoChanged x

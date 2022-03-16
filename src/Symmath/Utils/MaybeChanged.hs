@@ -1,3 +1,7 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
+
 module Symmath.Utils.MaybeChanged
   ( ApplyInto,
     MaybeChanged (..),
@@ -8,21 +12,16 @@ module Symmath.Utils.MaybeChanged
     applyOnNoChanged,
     chain,
     peek,
-    applyRecursively,
+    applyRecursivelyR2L,
     applyUntilNoChanged,
-    applyRecursivelyUntilNoChanged,
-    applyUntilNoChangedRecursively,
   )
 where
 
 import Control.Category ((>>>))
 import Data.Function ((&))
 import Symmath.Expr (Expr (..))
+import Symmath.Func (ApplyInto (..))
 import Prelude
-
-class ApplyInto a where
-  -- applyInto f a : Apply f on a and a's sub elem
-  applyInto :: (a -> MaybeChanged a) -> a -> MaybeChanged a
 
 data MaybeChanged a = Changed a | NoChanged a
 
@@ -52,21 +51,18 @@ peek :: MaybeChanged a -> a
 peek (Changed x) = x
 peek (NoChanged x) = x
 
-applyRecursively :: ApplyInto a => (a -> MaybeChanged a) -> a -> MaybeChanged a
-applyRecursively f x = apply (applyRecursively f & applyInto) (f x)
+applyRecursivelyR2L :: ApplyInto a (MaybeChanged a) (MaybeChanged a) => (a -> MaybeChanged a) -> a -> MaybeChanged a
+applyRecursivelyR2L f x = apply (applyRecursivelyR2L f & applyInto) (f x)
+
+applyRecursivelyL2R :: ApplyInto a (MaybeChanged a) (MaybeChanged a) => (a -> MaybeChanged a) -> a -> MaybeChanged a
+applyRecursivelyL2R f x = apply f (apply (applyRecursivelyR2L f & applyInto) (NoChanged x))
 
 applyUntilNoChanged :: (a -> MaybeChanged a) -> a -> a
 applyUntilNoChanged f x = case f x of
   Changed x' -> applyUntilNoChanged f x'
   NoChanged x' -> x'
 
-applyRecursivelyUntilNoChanged :: ApplyInto a => (a -> MaybeChanged a) -> a -> a
-applyRecursivelyUntilNoChanged = applyRecursively >>> applyUntilNoChanged
-
-applyUntilNoChangedRecursively :: ApplyInto a => (a -> MaybeChanged a) -> a -> a
-applyUntilNoChangedRecursively f = applyRecursively (applyUntilNoChanged f >>> Changed) >>> peek
-
-instance ApplyInto Expr where
+instance ApplyInto Expr (MaybeChanged Expr) (MaybeChanged Expr) where
   applyInto f (Add x y) = chainBy Add (f x) (f y)
   applyInto f (Mul x y) = chainBy Mul (f x) (f y)
   applyInto f (Pow x y) = chainBy Pow (f x) (f y)
