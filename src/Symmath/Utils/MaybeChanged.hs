@@ -1,18 +1,20 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Symmath.Utils.MaybeChanged
   ( ApplyInto,
     MaybeChanged (..),
     apply,
     apply',
+    tie,
     chainBy,
     applyOnChanged,
     applyOnNoChanged,
     chain,
     peek,
     applyRecursivelyR2L,
+    applyRecursivelyL2R,
     applyUntilNoChanged,
   )
 where
@@ -26,11 +28,15 @@ import Prelude
 data MaybeChanged a = Changed a | NoChanged a
 
 apply :: (a -> MaybeChanged a) -> MaybeChanged a -> MaybeChanged a
-apply f x = chainBy const (f (peek x)) x
+apply f (Changed x) = Changed (f x & peek)
+apply f (NoChanged x) = f x
 
 apply' :: (a -> a) -> MaybeChanged a -> MaybeChanged a
 apply' f (Changed x) = Changed (f x)
 apply' f (NoChanged x) = NoChanged (f x)
+
+tie :: (a -> MaybeChanged a) -> (a -> MaybeChanged a) -> a -> MaybeChanged a
+tie f g x = apply g (f x)
 
 chainBy :: (a -> a -> a) -> MaybeChanged a -> MaybeChanged a -> MaybeChanged a
 chainBy f (NoChanged x) (NoChanged y) = NoChanged (f x y)

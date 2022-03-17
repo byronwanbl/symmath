@@ -2,6 +2,7 @@ module Symmath.Utils.Others
   ( show,
     priority,
     exprKindId,
+    applyOnBoth,
     unreachable,
     (.+),
     (.-),
@@ -42,13 +43,19 @@ priority (Alpha _) = 100
 priority (Num _) = 100
 
 exprKindId :: Expr -> Int
-exprKindId (Add _ _) = 1
-exprKindId (Opp _) = 2
-exprKindId (Mul _ _) = 3
-exprKindId (Rec _) = 4
-exprKindId (Pow _ _) = 5
-exprKindId (Alpha _) = 6
-exprKindId (Num _) = 7
+exprKindId (Add _ _) = 6
+exprKindId (Opp _) = 7
+exprKindId (Mul _ _) = 4
+exprKindId (Rec _) = 5
+exprKindId (Pow _ _) = 3
+exprKindId (Alpha _) = 2
+exprKindId (Num _) = 1
+
+applyOnBoth :: (a -> a -> a) -> Maybe a -> Maybe a -> Maybe a
+applyOnBoth _ Nothing Nothing = Nothing
+applyOnBoth _ x@(Just _) Nothing = x
+applyOnBoth _ Nothing x@(Just _) = x
+applyOnBoth f (Just x) (Just y) = Just (f x y)
 
 unreachable :: a
 unreachable = error "Unreachable"
