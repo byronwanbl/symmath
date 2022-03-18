@@ -1,8 +1,9 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Symmath.Func (ApplyInto (..)) where
+module Symmath.Func (ApplyInto (..), Eq, Ord, Hashable) where
 
+import Data.Hashable (Hashable (hashWithSalt))
 import Symmath.Expr (Expr (..))
 import Symmath.Utils.Others (exprKindId, unreachable)
 
@@ -36,3 +37,12 @@ instance Ord Expr where
   compare x y = case compare (exprKindId x) (exprKindId y) of
     EQ -> unreachable
     x -> x
+
+instance Hashable Expr where
+  hashWithSalt i (Add x y) = i + hashWithSalt i x + hashWithSalt i y
+  hashWithSalt i (Mul x y) = i * 2 + hashWithSalt i x + hashWithSalt i y
+  hashWithSalt i (Opp x) = i * 3 + hashWithSalt i x
+  hashWithSalt i (Rec x) = i * 4 + hashWithSalt i x
+  hashWithSalt i (Pow x y) = i * 5 + hashWithSalt i x + hashWithSalt i y
+  hashWithSalt i (Alpha x) = hashWithSalt i x
+  hashWithSalt i (Num x) = hashWithSalt i x
