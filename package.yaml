@@ -4,7 +4,7 @@ github:              "byronwan/symmath"
 license:             BSD3
 author:              "ByronWan"
 maintainer:          "byronwan@outlook.com"
-copyright:           "2022 ByronWan here"
+copyright:           "Copyright 2022 ByronWan. All rights reserved."
 
 extra-source-files:
 - README.md
