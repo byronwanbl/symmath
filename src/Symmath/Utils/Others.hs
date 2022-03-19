@@ -19,7 +19,6 @@ import Prelude
 
 instance Show Expr where
   show (Add x y) = showWithBrackets 9 x <> " + " <> showWithBrackets 10 y
-  show (Mul (Known (-1)) x) = "1 - " <> showWithBrackets 99 x
   show (Mul x y) = showWithBrackets 19 x <> " * " <> showWithBrackets 20 y
   show (Pow x y) = showWithBrackets 30 x <> " ^ " <> showWithBrackets 29 y
   show (Unknown c) = [c]

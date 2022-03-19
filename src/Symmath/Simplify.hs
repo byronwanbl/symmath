@@ -89,14 +89,14 @@ tryMergeAdd x y =
     maybe' f x y = maybe y (f y) x
 
 splitKnown :: Expr -> (Maybe Expr, Maybe Expr)
-splitKnown (Mul x y) = (applyOnBoth Mul x' y', applyOnBoth Mul x'' y'')
+splitKnown (Mul x y) = (applyOnBoth Mul x' y', applyOnBoth Mul x'' y'' <&> (calcKnown >>> peek))
   where
     (x', x'') = splitKnown x
     (y', y'') = splitKnown y
 splitKnown x@(Known _) = (Nothing, Just x)
 splitKnown x@(Unknown _) = (Just x, Nothing)
 splitKnown x@(Pow _ _) = (Just x, Nothing)
-splitKnown x@(Add _ _) = unreachable
+splitKnown x@(Add _ _) = unreachable 
 
 counteractConst :: Expr -> MaybeChanged Expr
 counteractConst (Add (Known 0) x) = Changed x

@@ -61,7 +61,7 @@ applyRecursivelyR2L :: ApplyInto a (MaybeChanged a) (MaybeChanged a) => (a -> Ma
 applyRecursivelyR2L f x = apply (applyRecursivelyR2L f & applyInto) (f x)
 
 applyRecursivelyL2R :: ApplyInto a (MaybeChanged a) (MaybeChanged a) => (a -> MaybeChanged a) -> a -> MaybeChanged a
-applyRecursivelyL2R f x = apply f (apply (applyRecursivelyR2L f & applyInto) (NoChanged x))
+applyRecursivelyL2R f x = apply f (apply (applyRecursivelyL2R f & applyInto) (NoChanged x))
 
 applyUntilNoChanged :: (a -> MaybeChanged a) -> a -> a
 applyUntilNoChanged f x = case f x of
