@@ -20,12 +20,12 @@ import Prelude
 instance Show Expr where
   show (Add x (Opp y)) = showWithBrackets 9 x <> " - " <> showWithBrackets 10 y
   show (Add x y) = showWithBrackets 9 x <> " + " <> showWithBrackets 10 y
-  show (Opp x) = "-" <> showWithBrackets 10 x
+  show (Opp x) = "-" <> showWithBrackets 99 x
   show (Mul x (Rec y)) = showWithBrackets 19 x <> " / " <> showWithBrackets 20 y
   show (Mul x y) = showWithBrackets 19 x <> " * " <> showWithBrackets 20 y
   show (Pow x y) = showWithBrackets 30 x <> " ^ " <> showWithBrackets 29 y
-  show (Rec x) = "1 / " <> showWithBrackets 20 x
-  show (Alpha c) = show c
+  show (Rec x) = "1 / " <> showWithBrackets 99 x
+  show (Alpha c) = [c]
   show (Num i) = show i
 
 showWithBrackets :: Int -> Expr -> String

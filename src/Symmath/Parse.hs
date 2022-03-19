@@ -1,4 +1,4 @@
-module Symmath.Parse where
+module Symmath.Parse(parseExpr) where
 
 import Control.Category ((>>>))
 import Data.Function ((&))

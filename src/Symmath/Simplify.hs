@@ -1,4 +1,4 @@
-module Symmath.Simplify(simplify) where
+module Symmath.Simplify where
 
 import Control.Applicative (Applicative (liftA2))
 import Control.Category ((>>>))
@@ -23,11 +23,14 @@ import Prelude
 
 simplify :: Expr -> Expr
 simplify =
-  ((counteractOppAndRec & applyRecursivelyR2L) >>> peek)
+  ((numberCalc & applyRecursivelyL2R) >>> peek)
+    >>> ((counteractOppAndRec & applyRecursivelyR2L) >>> peek)
     >>> ((expandPow & applyRecursivelyR2L) >>> peek)
-    >>> ((distributeMul `tie` distributeOppAndRec) & applyRecursivelyR2L & applyUntilNoChanged)
+    >>> ((distributeOppAndRec `tie` distributeMul) & applyRecursivelyR2L & applyUntilNoChanged)
     >>> (reconstructAddAndMul & applyRecursivelyR2L & applyUntilNoChanged)
-    >>> ((reconstructAddAndMulByOrd `tie` numberCalc) & applyRecursivelyL2R & applyUntilNoChanged)
+    >>> (reconstructAddAndMulByOrd & applyRecursivelyL2R & applyUntilNoChanged)
+    >>> ((numberCalc & applyRecursivelyL2R) >>> peek)
+    >>> ((counteractConst & applyRecursivelyR2L) >>> peek)
     >>> (mergeAdd & applyRecursivelyR2L & applyUntilNoChanged)
 
 counteractOppAndRec :: Expr -> MaybeChanged Expr
@@ -82,7 +85,8 @@ tryMergeAdd x y =
     then
       Changed
         ( maybe' Mul x' (Add (fromMaybe (Num 1) x'') (fromMaybe (Num 1) y'') & (numberCalc >>> peek))
-            & removeMul1 & ((reconstructAddAndMul & applyRecursivelyR2L) >>> peek)
+            & removeMul1
+            & ((reconstructAddAndMul & applyRecursivelyR2L) >>> peek)
         )
     else NoChanged y
   where
@@ -107,6 +111,18 @@ splitConst x@(Alpha _) = (Just x, Nothing)
 splitConst x@(Pow _ _) = (Just x, Nothing)
 splitConst x@(Rec _) = (Just x, Nothing)
 splitConst x@(Add _ _) = unreachable
+
+counteractConst :: Expr -> MaybeChanged Expr
+counteractConst (Add (Num 0) x) = Changed x
+counteractConst (Add x (Num 0)) = Changed x
+counteractConst (Mul (Num 0) _) = Changed (Num 0)
+counteractConst (Mul _ (Num 0)) = Changed (Num 0)
+counteractConst (Mul (Num 1) x) = Changed x
+counteractConst (Mul x (Num 1)) = Changed x
+counteractConst (Mul (Opp x) (Opp y)) = Changed (Mul x y)
+counteractConst (Mul (Opp x) y) = Changed (Opp (Mul x y))
+counteractConst (Mul x (Opp y)) = Changed (Opp (Mul x y))
+counteractConst x = NoChanged x
 
 numberCalc :: Expr -> MaybeChanged Expr
 numberCalc (Add (Num x) (Num y)) = Changed (Num (x + y))
