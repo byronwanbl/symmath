@@ -72,10 +72,8 @@ instance ApplyInto Expr (MaybeChanged Expr) (MaybeChanged Expr) where
   applyInto f (Add x y) = chainBy Add (f x) (f y)
   applyInto f (Mul x y) = chainBy Mul (f x) (f y)
   applyInto f (Pow x y) = chainBy Pow (f x) (f y)
-  applyInto f (Opp x) = apply' Opp (f x)
-  applyInto f (Rec x) = apply' Rec (f x)
   applyInto _ x = NoChanged x
 
 instance Show a => Show (MaybeChanged a) where
-  show (Changed x) = "Changed(" <> show x <> ")"
-  show (NoChanged x) = "NoChanged(" <> show x <> ")"
+  show (Changed x) = "Changed " <> show x <> " "
+  show (NoChanged x) = "NoChanged " <> show x <> " " 

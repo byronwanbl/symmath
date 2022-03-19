@@ -6,23 +6,24 @@ module Symmath.Lib
     Eq,
     Hashable,
     Ord,
-    a,
-    n,
+    u,
+    k,
     (.*),
     (.+),
     (.-),
     (./),
     (.^),
-  )where
+  )
+where
 
 import Symmath.Expr (Expr (..))
 import Symmath.Func (Eq, Hashable, Ord)
 import Symmath.Parse (parseExpr)
 import Symmath.Simplify (simplify)
 import Symmath.Utils.Others
-  ( a,
-    n,
+  ( k,
     show,
+    u,
     (.*),
     (.+),
     (.-),
